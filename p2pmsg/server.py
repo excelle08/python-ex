@@ -19,6 +19,8 @@ __author__ = 'Excelle'
         b.Data=user;password
         c.Server verifies
         d."201 OK" for success and "403 WRONG" for failure
+        e.If successful, send user list data.
+          Every user is formatted as JSON and the list is pickled.
     5. Log out
         a.CMD='logout'
         b.Data=user;password
@@ -31,6 +33,7 @@ import threading
 import user
 import re
 import json
+import pickle
 
 current_ip = user.get_wan_ip()
 current_port = 12345
@@ -58,7 +61,11 @@ def resp(sock, addr):
                 if u:
                     user_lists.append(u)
                     sock.send("201 OK\r\n")
-                    
+                    lst = []
+                    for dat in user_lists:
+                        jsoned_data = json.dump(dat, default=user.user2dict)
+                        lst.append(jsoned_data)
+                    sock.send(pickle.dump(lst))
                 else:
                     sock.send("403 WRONG\r\n")
             except BaseException, e:

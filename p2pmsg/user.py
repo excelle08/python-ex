@@ -85,3 +85,14 @@ def user2dict(user):
         'lan_ip': user.lan_ip,
         'nickname': user.nickname
     }
+
+
+def dict2user(d):
+    u = User()
+    u.id = d['id']
+    u.username = d['username']
+    u.password = d['password']
+    u.wan_ip = d['wan_ip']
+    u.lan_ip = d['lan_ip']
+    u.nickname = d['nickname']
+    return u
