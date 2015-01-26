@@ -8,6 +8,7 @@ import json
 import re
 import threading
 import pickle
+import time
 import cfg
 import user
 
@@ -21,6 +22,16 @@ def retrieve_user_list(encoded_str):
 
 
 def thread_login(sock, addr):
+    global username, password
+    sock.connect(addr)
+    first_str = sock.recv(1024)
+    if first_str == '200 Accepted':
+        sock.send('login\r\n' + username + ';' + password)
+        data = sock.recv(4096)
+        retrieve_user_list(data)
+    else:
+        print("Error connecting to server.")
+        exit()
     pass
 
 
@@ -44,7 +55,6 @@ def register():
 
 # Step 1. Establish connection with central server
 s_svr = socket.socket()
-s_svr.connect((cfg.server_ip, cfg.server_port))
 t_svr = threading.Thread(target=thread_login, args=(s_svr, (cfg.server_ip, cfg.server_port)))
 
 opt = raw_input("Login(L) or Register(R)?")

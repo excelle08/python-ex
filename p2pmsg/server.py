@@ -35,7 +35,8 @@ import re
 import json
 import pickle
 
-current_ip = user.get_wan_ip()
+# current_ip = user.get_wan_ip()
+current_ip = '127.0.0.1'
 current_port = 12345
 user_lists = []
 
