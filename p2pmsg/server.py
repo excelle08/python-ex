@@ -46,7 +46,7 @@ def resp(sock, addr):
     sock.send("200 Accepted")
     while True:
         data = sock.recv(1024)
-        cmd, content = re.split('\r\n', data)
+        cmd, content = re.split('\r\n', data, 1)
         if cmd == 'register':
             inf = re.split(';', content)
             try:
@@ -64,9 +64,9 @@ def resp(sock, addr):
                     sock.send("201 OK\r\n")
                     lst = []
                     for dat in user_lists:
-                        jsoned_data = json.dump(dat, default=user.user2dict)
+                        jsoned_data = json.dumps(dat, default=user.user2dict)
                         lst.append(jsoned_data)
-                    sock.send(pickle.dump(lst))
+                    sock.send(pickle.dumps(lst))
                 else:
                     sock.send("403 WRONG\r\n")
             except BaseException, e:

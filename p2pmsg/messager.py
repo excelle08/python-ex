@@ -18,9 +18,9 @@ user_list = []
 
 def retrieve_user_list(encoded_str):
     global user_list
-    lst = pickle.load(encoded_str)
+    lst = pickle.loads(encoded_str)
     for i in lst:
-        user_list.append(json.load(i, object_hook=user.dict2user))
+        user_list.append(json.loads(i, object_hook=user.dict2user))
 
 
 def thread_login(sock, addr):
@@ -34,11 +34,14 @@ def thread_login(sock, addr):
             header, data = re.split("\r\n", packet, 1)
             if header == '201 OK':
                 user_list = []
-                retrieve_user_list(data)
+                try:
+                    retrieve_user_list(data)
+                except EOFError:
+                    pass
             else:
                 print(header + ': FAILED TO LOGIN.')
                 exit()
-            time.sleep(30)
+            time.sleep(15)
     else:
         print("Error connecting to server.")
         exit()
