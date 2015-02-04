@@ -1,9 +1,6 @@
 __author__ = 'Excelle'
 import logging, time, functools, threading, uuid
 
-engine = None
-
-
 # Dict object:
 '''
     Simple dict but support access as x.y style.
@@ -70,6 +67,14 @@ def _profiling(start, sql=''):
         logging.info('[PROFILING] [DB] %s: %s' % (t, sql))
 
 
+class DBError(Exception):
+    pass
+
+
+class MultiColumnsError(DBError):
+    pass
+
+
 class _LasyConnection(object):
 
     def __init__(self):
@@ -96,37 +101,6 @@ class _LasyConnection(object):
             connection.close()
 
 
-class DBError(Exception):
-    pass
-
-
-class MultiColumnsError(DBError):
-    pass
-
-
-class _Engine(object):
-    def __init__(self, connect):
-        self._connect = connect
-
-    def connect(self):
-        return self._connect
-
-
-def create_engine(username, password, dbname, host='127.0.0.1', port='3306', **kw):
-    import mysql.connector
-    global engine
-    if engine is not None:
-        raise DBError("Engine has already been created.")
-    params = dict(user=username, password=password, database=dbname, host=host, port=port)
-    default = dict(use_unicode=True, charset='utf8', collation='utf8_general_ci', autocommit=False)
-    for key, value in default.iteritems():
-        params[key] = kw.pop(key, value)
-    params.update(kw)
-    params['buffered'] = True
-    engine = mysql.connector.connect(**params)
-    logging.info('Initialize MySQL Engine: <%s> OK.' % hex(id(engine)))
-
-
 class _dbContext(threading.local):
     def __init__(self):
         self.connection = None
@@ -147,6 +121,30 @@ class _dbContext(threading.local):
         return self.connection.cursor()
 
 _db_ctx = _dbContext()
+engine = None
+
+
+class _Engine(object):
+    def __init__(self, connect):
+        self._connect = connect
+
+    def connect(self):
+        return self._connect()
+
+
+def create_engine(username, password, dbname, host='127.0.0.1', port='3306', **kw):
+    import mysql.connector
+    global engine
+    if engine is not None:
+        raise DBError("Engine has already been created.")
+    params = dict(user=username, password=password, database=dbname, host=host, port=port)
+    default = dict(use_unicode=True, charset='utf8', collation='utf8_general_ci', autocommit=False)
+    for key, value in default.iteritems():
+        params[key] = kw.pop(key, value)
+    params.update(kw)
+    params['buffered'] = True
+    engine = _Engine(lambda: mysql.connector.connect(**params))
+    logging.info('Initialize MySQL Engine: <%s> OK.' % hex(id(engine)))
 
 
 class _ConnectionCtx(object):
