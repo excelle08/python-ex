@@ -1305,7 +1305,7 @@ class WSGIApplication(object):
                     args = fn.match(path_info)
                     if args:
                         return fn(*args)
-                raise notfound()
+                raise NotFound()
             if request_method=='POST':
                 fn = self._post_static.get(path_info, None)
                 if fn:
@@ -1314,8 +1314,8 @@ class WSGIApplication(object):
                     args = fn.match(path_info)
                     if args:
                         return fn(*args)
-                raise notfound()
-            raise badrequest()
+                raise NotFound()
+            raise BadRequest()
 
         fn_exec = _build_interceptor_chain(fn_route, *self._interceptors)
 

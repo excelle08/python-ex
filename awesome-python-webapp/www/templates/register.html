@@ -45,7 +45,7 @@
     				postApi('/api/users', {
     					name: this.name,
     					email: this.email.trim().toLowerCase(),
-    					password: CryptoJS.MD5(this.password1.toString()),
+    					password: CryptoJS.MD5(this.password1).toString()
     				}, function(err, r){
     					if(err){
     						showError(err);
@@ -69,6 +69,7 @@
 <div class="uk-width-2-3">
 	<h1>Welcome to register!</h1>
 	<form id="form-register" class="uk-form uk-form-stacked" v-on="submit: submit">
+        <div class='uk-alert uk-alert-danger uk-hidden'></div>
 		<div class="uk-form-row">
 			<label class="uk-form-label">Name:</label>
 			<div class="uk-form-controls">
