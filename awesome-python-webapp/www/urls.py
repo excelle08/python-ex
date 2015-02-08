@@ -5,7 +5,7 @@ from transwrap.web import get, view, post, ctx, interceptor, SeeOther, NotFound
 from model import User, Blog
 from config.config import configs
 from apis import api
-from apis import APIError, APIPermissionError, APIResourceNotFoundError, APIValueError
+from apis import APIError, APIPermissionError, APIResourceNotFoundError, APIValueError, Page
 import re, time, logging
 import hashlib
 
@@ -54,6 +54,33 @@ def register_user():
     ctx.response.set_cookie(_COOKIE_NAME, cookie)
     return user
 
+@api
+@post('/api/blogs')
+def api_create_blog():
+    article = ctx.request.input(name='', summary='', content='')
+    name = article.name.strip()
+    summary = article.name.strip()
+    content = article.content.strip()
+    if not name:
+        raise APIValueError('name', 'Title is empty')
+    if not summary:
+        raise APIValueError('summary', 'Summary is empty')
+    if not content:
+        raise APIValueError('content', 'No content.')
+    user = ctx.request.user
+    blog = Blog(user_id=user.id, user_name=user.name, name=name, summary=summary, content=content)
+    blog.insert()
+    return blog
+
+@view('manage_blog_edit.html')
+@get('/manage/blogs/create')
+def manage_blogs_create():
+    return dict(id=None, action='/api/blogs', redirect='/manage/blogs', user=ctx.request.user)
+
+@view('manage_blog_list.html')
+@get('/manage/blogs')
+def manage_blogs():
+    return dict(page_index=_get_page_index(), user=ctx.request.user)
 
 @view('register.html')
 @get('/register')
@@ -121,9 +148,29 @@ def parse_signed_cookie(cookie_str):
     except:
         return None
 
-
 def check_admin():
     user = ctx.request.user
     if user and user.admin:
         return
     raise APIPermissionError('No permission.')
+
+def _get_page_index():
+    _index = 1
+    try:
+        i = int(ctx.request.get('page', '1'))
+        _index = i.page
+    except:
+        pass
+    return _index
+
+def _get_blogs_by_page():
+    total = Blog.count_all()
+    page = Page(total, _get_page_index())
+    blogs = Blog.find_by('order by created_at desc limit ?,?', page.offset, page.limit)
+    return blogs, page
+
+@api
+@get('/api/blogs')
+def api_get_blogs():
+    blogs, page = _get_blogs_by_page()
+    return dict(blogs=blogs, page=page)
